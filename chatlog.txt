@@ -1,0 +1,133 @@
+Freitag, 21. Oktober 2016
+09:18 - Sabre One: I can think of two reasons
+09:18 - Sabre One: one, me accidently deleting or interacting with a object why in "storage" could screw it up. As they really are just tp'd to a corner of the map. Another could be they are zues editable objects still, even stored.
+09:20 - Tajin: well, if they're just moved to a corner, then they will certainly stay editable
+09:20 - Tajin: but that shouldnt stop them from beeing taken out afterwards
+09:21 - Tajin: http://rising.at/projekte/ArmA/R3F_LOG/config.sqf
+09:21 - Tajin: lines 236 - 274
+09:22 - Tajin: thats all you need to change to disable towing and lifting btw
+09:23 - Tajin: ok it wont disable that part of the script completely but it'll be unusable
+09:23 - Sabre One: Yea, I can leave that later. I just wan't to make sure it doesn't screw with advance towing/lifting
+09:27 - Sabre One: Sol far things been going to plan though, still working on kinking out the revive system. Kinda/sorta works.
+09:27 - Sabre One: Reparing doesn't seem to work in zues either, but I think that is a Bi glitch.
+09:27 - Tajin: farooq ?
+09:27 - Tajin: or which one is it ?
+09:27 - Sabre One: Just messing with the vanilla one for now. It seemed to kick in but no one really used it today.
+09:28 - Sabre One: Made it so only medics can revive :P
+09:28 - Tajin: yeah well it has some flaws
+09:30 - Sabre One: The trident fix works perfectly, we had a good "CSAT vs FIA" hostage session today.
+09:30 - Tajin: cool
+09:31 - Sabre One: I also been messing with getting rid of the Game mode module for zues all together as well. Only issue I had was it made players un-selectable in zues.
+09:32 - Tajin: theres a module for that
+09:32 - Tajin: editing players is off by default I think
+09:33 - Sabre One: Well not editing per say, but simply seeing their icons in the zues editor.
+09:33 - Tajin: ah ok
+09:33 - Tajin: I usually script that
+09:33 - Tajin: curatorAddEditableObjects :)
+09:34 - Sabre One: nice, think you could write me up something? Getting rid of the "see lighting" silly objectives is so nice.
+09:34 - Tajin: see lightning ?
+09:34 - Sabre One: all the beginning objectives you normally do
+09:34 - Sabre One: you get rid of all that without using the game mode module. Which is nice.
+09:35 - Tajin: oh ok
+09:35 - Tajin: the curator module ?
+09:35 - Tajin: maybe we're talking of different things
+09:35 - Tajin: dont remember what modules there are exactly
+09:36 - Tajin: anyway you can create the following file just to be safe
+09:36 - Tajin: initPlayerServer.sqf
+09:36 - Tajin: and put this into it
+09:36 - Tajin: params ["_player", "_jip"];
+{
+_x addCuratorEditableObjects [[_player], false];
+} count allCurators;
+09:36 - Tajin: that will make sure all players are editable by every zeus on the map
+09:36 - Tajin: or... at least selectable
+09:37 - Sabre One: Yea, thats all it matters. Cleans  up a lot of stuff for me.
+09:39 - Tajin: its also possible to add new zeus on the fly
+09:40 - Tajin: or make it so specific players get it automatically
+09:40 - Tajin: based on their uid
+09:40 - Sabre One: Yea I seen that done in servers. Here is a plot twist, can you do that with high command as well?
+09:40 - Tajin: I guess so
+09:41 - Sabre One: I mean you can simulate a lot of high command with zues, the issue I found if you want a player to have it for game purposes beyond GMing a session is they abuse the overhead camera.
+09:41 - Tajin: true
+09:42 - Tajin: same with the tactical camera that you get as squadleader...
+09:42 - Sabre One: At least with high command, if your in charge of 3 squads you kinda just have to order them into a area and let them do their job. With or without a view on there position.
+09:46 - Tajin: i guess it would also be possible to hide everything but the friendly units when you're in zeus
+09:46 - Tajin: though that could be a bit weird
+09:46 - Sabre One: Is it possble? From what I seen even if you can't see the icons. You can see the units still just moving around.
+09:47 - Tajin: yes thats the default
+09:47 - Tajin: but its possible to hide units completely
+10:01 - Sabre One: ow
+10:01 - Sabre One: ow
+10:01 - Sabre One: almost forgot, a new request for a project.
+10:02 - Sabre One: http://www.armaholic.com/page.php?id=21645 Can you get this to work? It's pretty outdated.
+10:04 - Sabre One: or I should say, can you get this to work in a MPZues enviroment? It works well in singleplayer still.
+10:05 - Tajin: oh that one
+10:05 - Tajin: never tried it in mp but yeh, should be doable
+10:06 - Tajin: if all else fails, I can just write my own version of it
+10:09 - Sabre One: Yea it would be nice, Tanoa offers some pretty good chances for water borne missions, but diving is limited due to the inability to set charges.
+10:09 - Tajin: initServer.sqf <--- do you have that file ?
+10:09 - Tajin: if not, make one and add this:
+10:09 - Tajin: fnc_handleCuratorVisibility = {
+private["_gather"];
+_gather = allUnits + vehicles;
+{
+if (player countEnemy [_x] isEqualTo 1) then {
+if (!isObjectHidden) then {
+_x hideObject true;
+curHiddenObjects pushBack _x;
+};
+};
+} count _gather;
+
+waitUntil {sleep 1; isNull findDisplay 312};
+{
+_x hideObject false;
+} count curHiddenObjects
+};
+publicVariable "fnc_handleCuratorVisibility";
+
+{
+_x addEventHandler ["BIS_fnc_curatorObjectRegistered", {
+params["_cur","_list"];
+private["_player"];
+_player = getAssignedCuratorUnit _x;
+[] remoteExec ["fnc_handleCuratorVisibility",_player];
+}];
+} count allCurators;
+10:09 - Tajin: or actually... hang on
+10:10 - Tajin: http://rising.at/projekte/ArmA/initServer.sqf
+10:10 - Tajin: there
+10:10 - Tajin: havent tested it yet. so it could go horribly wrong ...
+10:10 - Tajin: but in theory
+10:11 - Sabre One: whats it do?
+10:11 - Tajin: it should hide every hostile unit when you enter zeus mode
+10:11 - Tajin: and make them visible again, when you leave it
+10:11 - Sabre One: ow, well I probably won't mess with that right away. It's in the future plan though.
+10:12 - Tajin: it doesnt account for units that are added afterwards though
+10:12 - Tajin: yeh
+10:12 - Sabre One: I'll save the script for later.
+10:12 - Tajin: i'll put it on my todo list anyway
+10:12 - Tajin: its an interesting idea
+10:12 - Tajin: maybe I can improve it further
+10:12 - Sabre One: The concept for me in my head is to say have a "officer" slot in the teams
+10:13 - Sabre One: that officer slot can control larger groups of units, or take other units under his/her wing. Allowing for sorta a 3rd tier command slot .
+10:14 - Tajin: in theory it would even be possible to hide only enemys that are not visible to any friendly units
+10:14 - Tajin: but that might be a resource itensive
+10:14 - Tajin: I remember an addon that did something similar for thirdperson view
+10:15 - Tajin: where it allowed thirdperson  but hid any enemies that you didnt have direct line of sight to
+10:16 - Sabre One: Yea, well so far I think aside from that diving script. The remaining stuff with be polish.
+10:16 - Sabre One: I think you like the end result in all honesty. It opens up a ton of mission options that put more on the players actions and leaves zues free on other things naturally.
+10:17 - Tajin: diving script ?
+10:17 - Sabre One: the one I just posted, for placing bombs.
+10:18 - Tajin: oh, thats not specific for diving
+10:18 - Sabre One: True, I just think more for it in terms of expanding mission possiblity.
+10:22 - Tajin: sure
+10:23 - Tajin: certainly a useful feature
+10:23 - Tajin: ace has that too
+10:23 - Tajin: but I guess youre aiming for a mod-free environment
+10:23 - Sabre One: It won't be forever, just starting out as such. I don't think I'll use ACE though.
+10:24 - Sabre One: My main goal is quality. I seen to many servers slap 30 mods together and can't figure out why their server needs restarded every 6 hours.
+10:28 - Tajin: true
+10:28 - Tajin: same thing can easily happen with scripts though
+10:29 - Tajin: some are not optimized at all
+10:32 - Sabre One hat den Status gewechselt zu: Abwesend.
